@@ -77,7 +77,7 @@ class TripDetailSerializer(serializers.ModelSerializer):
         model = Trip
         fields = [
             'id', 'current_location', 'pickup_location', 'dropoff_location',
-            'current_cycle_used',
+            'current_cycle_used', 'cycle_hours_after_trip',
             'current_lat', 'current_lng',
             'pickup_lat', 'pickup_lng',
             'dropoff_lat', 'dropoff_lng',

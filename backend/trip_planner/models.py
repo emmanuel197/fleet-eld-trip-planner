@@ -60,6 +60,10 @@ class Trip(models.Model):
         null=True, blank=True,
         help_text="Total number of days the trip will span"
     )
+    cycle_hours_after_trip = models.FloatField(
+        null=True, blank=True,
+        help_text="Cycle hours used after trip completion (accounts for 34-hr restart)"
+    )
 
     # --- Route Geometry (encoded polyline for map display) ---
     route_geometry = models.JSONField(

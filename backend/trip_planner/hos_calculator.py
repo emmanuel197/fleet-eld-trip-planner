@@ -198,8 +198,8 @@ class HOSCalculator:
         # --- Fill remaining day with off-duty/sleeper ---
         self._finalize_current_day()
 
-        logger.info(f"Trip planned: {len(self._stops)} stops, {len(self._daily_logs)} daily logs")
-        return self._stops, self._daily_logs
+        logger.info(f"Trip planned: {len(self._stops)} stops, {len(self._daily_logs)} daily logs, final cycle: {self._cycle_hours_used:.1f}h")
+        return self._stops, self._daily_logs, self._cycle_hours_used
 
     def _simulate_driving_segment(
         self, segment_miles, segment_hours, destination_name, is_to_pickup
@@ -240,8 +240,8 @@ class HOSCalculator:
                 # Cannot drive further — determine which limit was hit
                 if max_cycle_remaining <= 0.01:
                     logger.info("Cycle limit reached — need 34-hour restart")
-                    # For simplicity, take a 10-hour rest (would need 34-hr for full reset)
-                    self._take_rest_break('Cycle limit rest')
+                    # Take a 34-hour restart to reset the 70-hour cycle
+                    self._take_rest_break('Cycle limit rest', is_cycle_reset=True)
                 elif max_drive_in_shift <= 0.01 or max_window_remaining <= 0.01:
                     # Hit 11-hour or 14-hour limit — take mandatory 10-hour rest
                     self._take_rest_break('Shift limit rest')
@@ -295,52 +295,84 @@ class HOSCalculator:
 
         logger.debug(f"30-min break at {location}")
 
-    def _take_rest_break(self, reason=''):
-        """Insert a mandatory 10-hour off-duty rest period."""
+    def _take_rest_break(self, reason='', is_cycle_reset=False):
+        """
+        Insert a mandatory rest period.
+        
+        For 10-hour rest: Standard shift reset
+        For 34-hour restart: Resets the 70-hour cycle
+        
+        IMPORTANT: This method properly handles multi-day rest by:
+        1. Filling current day's remaining hours with sleeper
+        2. Creating full 24-hour sleeper days as needed
+        3. Creating partial sleeper day for remaining hours
+        4. Finalizing each day properly before starting the next
+        """
         rest_start = self._get_hour_of_day()
         location = self._get_approximate_location()
+        
+        # Determine rest duration
+        rest_duration = 34.0 if is_cycle_reset else MIN_OFF_DUTY_HOURS
+        rest_type = '34-hr restart' if is_cycle_reset else '10-hr rest'
 
-        # Finalize current day's log before rest
-        self._add_stop('sleep', location, self._miles_driven, self._get_total_driving(), MIN_OFF_DUTY_HOURS)
-
-        # Fill rest of current day with sleeper/off-duty
+        # Add stop marker for the rest
+        self._add_stop('sleep', location, self._miles_driven, self._get_total_driving(), rest_duration)
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # STEP 1: Fill current day's remaining hours with sleeper
+        # ─────────────────────────────────────────────────────────────────────
         hours_left_in_day = 24.0 - rest_start
-        if hours_left_in_day > 0:
-            self._add_duty_entry('sleeper', rest_start, 24.0, location, reason)
-
-        # Finalize current day
+        hours_for_today = min(hours_left_in_day, rest_duration)
+        
+        if hours_for_today > 0.01:
+            self._add_duty_entry('sleeper', rest_start, rest_start + hours_for_today, location, reason)
+        
         self._finalize_current_day()
+        self._current_time += timedelta(hours=hours_for_today)
+        rest_duration -= hours_for_today
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # STEP 2: Create full 24-hour sleeper days
+        # ─────────────────────────────────────────────────────────────────────
+        while rest_duration >= 24.0:
+            self._day_start_time = self._current_time
+            self._add_duty_entry('sleeper', 0, 24.0, location, f'{reason} (continued)')
+            self._finalize_current_day()
+            self._current_time += timedelta(hours=24.0)
+            rest_duration -= 24.0
+        
+        # ─────────────────────────────────────────────────────────────────────
+        # STEP 3: Handle remaining partial day of rest
+        # ─────────────────────────────────────────────────────────────────────
+        if rest_duration > 0.01:
+            self._day_start_time = self._current_time
+            self._add_duty_entry('sleeper', 0, rest_duration, location, f'{reason} (continued)')
+            self._current_time += timedelta(hours=rest_duration)
+            # DON'T finalize yet - we'll add more entries (pre-trip, driving) to this day
+        
+        # Add remark
+        self._add_remark(location, f'{rest_type} ({reason})')
 
-        # Start new day — continue rest if needed
-        rest_remaining = MIN_OFF_DUTY_HOURS - hours_left_in_day
-        if rest_remaining > 0:
-            self._add_duty_entry('sleeper', 0, rest_remaining, location, f'{reason} (continued)')
-
-        # Fill off-duty time after waking until pre-trip
-        wake_hour = rest_remaining if rest_remaining > 0 else 0
-        if wake_hour < 24:
-            self._add_duty_entry('off_duty', wake_hour, wake_hour + 0.01, location, 'Wake up')
-
-        self._add_remark(location, f'10-hr rest ({reason})')
-
-        # Advance time by full rest period
-        self._advance_time(MIN_OFF_DUTY_HOURS, is_driving=False, is_on_duty=False)
-
-        # Reset shift counters
+        # ─────────────────────────────────────────────────────────────────────
+        # STEP 4: Reset HOS counters after rest
+        # ─────────────────────────────────────────────────────────────────────
         self._shift_driving_hours = 0.0
         self._shift_duty_hours = 0.0
         self._driving_since_break = 0.0
+        
+        # Reset 70-hour cycle if this is a 34-hour restart
+        if is_cycle_reset:
+            logger.info(f"34-hour restart complete - cycle hours reset from {self._cycle_hours_used:.1f} to 0")
+            self._cycle_hours_used = 0.0
 
-        # IMPORTANT: Update day_start_time to the current time AFTER rest completes.
-        # This ensures the next day's date is correct (the new day starts after waking up).
-        self._day_start_time = self._current_time
-
-        # Pre-trip after rest
+        # ─────────────────────────────────────────────────────────────────────
+        # STEP 5: Pre-trip inspection after waking
+        # ─────────────────────────────────────────────────────────────────────
         pre_trip_start = self._get_hour_of_day()
         self._add_duty_entry('on_duty', pre_trip_start, pre_trip_start + PRE_TRIP_INSPECTION, location, 'Pre-trip inspection')
         self._advance_time(PRE_TRIP_INSPECTION, is_driving=False, is_on_duty=True)
 
-        logger.debug(f"10-hr rest at {location}: {reason}")
+        logger.debug(f"{rest_type} at {location}: {reason}")
 
     def _take_fuel_stop(self):
         """Insert a fuel stop (30 minutes on-duty)."""
@@ -415,6 +447,15 @@ class HOSCalculator:
 
     def _add_duty_entry(self, status, start_hour, end_hour, location, remarks):
         """Add a duty status entry to the current day's log."""
+        # Check if we've crossed into a new calendar day
+        current_date = self._current_time.date()
+        day_start_date = self._day_start_time.date() if hasattr(self._day_start_time, 'date') else self._day_start_time
+        
+        if current_date > day_start_date and self._current_day_entries:
+            # We've crossed midnight - finalize the previous day first
+            self._finalize_current_day()
+            self._day_start_time = datetime.combine(current_date, datetime.min.time())
+        
         # Clamp to 24-hour day
         start_hour = max(0.0, min(24.0, start_hour))
         end_hour = max(start_hour, min(24.0, end_hour))

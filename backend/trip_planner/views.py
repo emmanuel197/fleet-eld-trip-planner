@@ -136,7 +136,7 @@ class PlanTripView(APIView):
                 start_time=datetime.now().replace(hour=8, minute=0, second=0, microsecond=0)
             )
 
-            stops, daily_logs = calculator.calculate()
+            stops, daily_logs, final_cycle_hours = calculator.calculate()
 
             # ============================================================
             # STEP 4: Assign coordinates to stops
@@ -188,6 +188,7 @@ class PlanTripView(APIView):
                 total_duration_hours=total_hours,
                 total_trip_days=len(daily_logs),
                 route_geometry=combined_geometry,
+                cycle_hours_after_trip=final_cycle_hours,
             )
 
             # Save stops

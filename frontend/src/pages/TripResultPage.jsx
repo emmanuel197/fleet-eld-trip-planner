@@ -313,7 +313,8 @@ function TripResultPage() {
 
             {/* Cycle progress bar */}
             {(() => {
-              const cycleAfterTrip = trip.current_cycle_used + (trip.total_duration_hours || 0);
+              // Use the actual cycle hours after trip from backend (accounts for 34-hr restart)
+              const cycleAfterTrip = trip.cycle_hours_after_trip ?? (trip.current_cycle_used + (trip.total_duration_hours || 0));
               const cyclePercent = Math.min((cycleAfterTrip / 70) * 100, 100);
               // Severity-based color: green (safe) → amber (warning) → red (critical)
               const cycleColor = cycleAfterTrip > 55 ? '#EF4444' : cycleAfterTrip > 35 ? '#F59E0B' : '#10B981';
