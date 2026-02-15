@@ -319,26 +319,38 @@ class HOSCalculator:
         self._add_stop('sleep', location, self._miles_driven, self._get_total_driving(), rest_duration)
         
         # ─────────────────────────────────────────────────────────────────────
-        # STEP 1: Fill current day's remaining hours with sleeper
+        # STEP 1: Fill current day's remaining hours with sleeper (until midnight)
         # ─────────────────────────────────────────────────────────────────────
         hours_left_in_day = 24.0 - rest_start
-        hours_for_today = min(hours_left_in_day, rest_duration)
         
-        if hours_for_today > 0.01:
-            self._add_duty_entry('sleeper', rest_start, rest_start + hours_for_today, location, reason)
-        
-        self._finalize_current_day()
-        self._current_time += timedelta(hours=hours_for_today)
-        rest_duration -= hours_for_today
+        if rest_duration >= hours_left_in_day:
+            # Rest crosses midnight - fill to end of day, finalize, and continue
+            hours_for_today = hours_left_in_day
+            
+            if hours_for_today > 0.01:
+                self._add_duty_entry('sleeper', rest_start, 24.0, location, reason)
+            
+            self._finalize_current_day()
+            self._current_time += timedelta(hours=hours_for_today)
+            self._day_start_time = self._current_time  # Now at midnight of new day
+            rest_duration -= hours_for_today
+        else:
+            # Rest fits within current day - don't finalize yet
+            # Just add sleeper entry and continue on same day
+            if rest_duration > 0.01:
+                self._add_duty_entry('sleeper', rest_start, rest_start + rest_duration, location, reason)
+                self._current_time += timedelta(hours=rest_duration)
+            rest_duration = 0  # All rest consumed, skip STEP 2 and 3
         
         # ─────────────────────────────────────────────────────────────────────
         # STEP 2: Create full 24-hour sleeper days
         # ─────────────────────────────────────────────────────────────────────
         while rest_duration >= 24.0:
-            self._day_start_time = self._current_time
+            # _day_start_time was set after previous finalize
             self._add_duty_entry('sleeper', 0, 24.0, location, f'{reason} (continued)')
             self._finalize_current_day()
             self._current_time += timedelta(hours=24.0)
+            self._day_start_time = self._current_time  # Set AFTER advancing time
             rest_duration -= 24.0
         
         # ─────────────────────────────────────────────────────────────────────
@@ -545,10 +557,10 @@ class HOSCalculator:
         )
         self._daily_logs.append(daily_log)
 
-        # Reset for next day
+        # Reset for next day - clear entries and miles, but DON'T auto-set _day_start_time
+        # The calling code is responsible for setting _day_start_time correctly
         self._current_day_entries = []
         self._current_day_miles = 0.0
-        self._day_start_time = self._current_time
 
         logger.debug(
             f"Day {day_number}: drive={driving:.1f}h, on_duty={on_duty:.1f}h, "
