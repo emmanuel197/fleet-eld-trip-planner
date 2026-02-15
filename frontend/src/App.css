@@ -1,0 +1,118 @@
+/**
+ * Global styles for Fleet ELD Trip Planner
+ * 
+ * Minimal — most styling handled by MUI theme.
+ * This file handles:
+ * - Body defaults (dark background, font smoothing)
+ * - Leaflet overrides for dark theme
+ * - Scrollbar styling
+ */
+
+/* Base */
+body {
+  margin: 0;
+  padding: 0;
+  /* background-color handled by MUI CssBaseline */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar (dark theme) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.35);
+}
+
+/* Leaflet popup dark theme override (only in dark mode) */
+body.dark .leaflet-popup-content-wrapper {
+  background: #1E293B !important;
+  color: #F8FAFC !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+body.dark .leaflet-popup-tip {
+  background: #1E293B !important;
+}
+
+body.dark .leaflet-popup-close-button {
+  color: #94A3B8 !important;
+}
+
+
+/* Remove Leaflet default marker shadows (we use CircleMarkers) */
+.leaflet-marker-shadow {
+  display: none;
+}
+
+
+/* ─── PRINT STYLES (FMCSA Log Format) ─── */
+@media print {
+
+  /* Setup Page */
+  @page {
+    size: letter landscape;
+    margin: 0.5in;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide everything by default (The "App" UI) */
+  .no-print,
+  nav,
+  header,
+  footer,
+  .MuiAppBar-root,
+  .MuiDrawer-root,
+  .MuiToolbar-root {
+    display: none !important;
+  }
+
+  /* Show the specific print layout */
+  .print-only {
+    display: block !important;
+    width: 100%;
+  }
+
+  /* Page Break Handling */
+  .print-page {
+    page-break-after: always;
+    break-after: always;
+    min-height: 90vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+}
+
+/* Hide print layout on screen */
+.print-only {
+  display: none;
+}

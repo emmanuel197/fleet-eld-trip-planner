@@ -1,0 +1,158 @@
+# Fleet ELD Trip Planner
+
+**Fleet ELD Trip Planner** is a professional-grade trip planning tool for commercial drivers. It automates **FMCSA Hours of Service (HOS)** compliance, calculates optimal routes with mandatory breaks, and generates **inspection-ready PDF log sheets**.
+
+Built with **Django REST Framework** (backend) and **React + Material UI** (frontend).
+
+---
+
+## Features
+
+## Features
+
+- **Trip Planning**: Enter current location, pickup, dropoff, and cycle hours used
+- **Route Visualization**: Interactive map showing the full route with stops, rest areas, and fuel stops
+- **HOS Compliance Engine**: Automatically calculates mandatory breaks, rest periods, and driving windows per FMCSA regulations
+- **Export to PDF**: One-click generation of **"Driver's Daily Log"** sheets in strict FMCSA paper format, complete with 24-hour grid and calculated totals.
+- **Modern Dark/Light UI**: Fully responsive interface with theme support for night driving.
+- **Multi-day Support**: Generates multiple log sheets for trips spanning several days
+
+## HOS Rules Implemented (Property-Carrying, 70hr/8day)
+
+- **11-Hour Driving Limit**: Max 11 hours driving after 10 consecutive hours off duty
+- **14-Hour Driving Window**: Cannot drive beyond 14th consecutive hour after coming on duty
+- **30-Minute Break**: Required after 8 cumulative hours of driving
+- **10-Hour Off-Duty**: Minimum 10 consecutive hours off duty between shifts
+- **70-Hour/8-Day Limit**: Cannot drive after 70 hours on duty in 8 consecutive days
+- **Fueling**: At least once every 1,000 miles
+- **Pickup/Dropoff**: 1 hour allocated for each
+
+## Tech Stack
+
+### Backend (Render)
+- Python 3.11+
+- Django 5.x
+- Django REST Framework
+- PostgreSQL (Render managed)
+- Gunicorn + Whitenoise
+
+### Frontend (Vercel)
+- React 18+ (Vite)
+- Material UI (MUI v6)
+- Leaflet + OpenStreetMap (map)
+- HTML5 Canvas (ELD log drawing)
+- Axios
+
+## Project Structure
+
+```
+fleet-eld-trip-planner/
+├── backend/                    # Django REST API
+│   ├── eld_project/            # Django project settings
+│   │   ├── __init__.py
+│   │   ├── settings.py
+│   │   ├── urls.py
+│   │   ├── wsgi.py
+│   │   └── asgi.py
+│   ├── trip_planner/           # Main Django app
+│   │   ├── migrations/
+│   │   ├── __init__.py
+│   │   ├── admin.py
+│   │   ├── apps.py
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── hos_calculator.py   # HOS compliance engine
+│   │   └── route_service.py    # Route calculation service
+│   ├── manage.py
+│   ├── requirements.txt
+│   ├── build.sh
+│   ├── render.yaml
+│   └── .env.example
+├── frontend/                   # React + Vite app
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── ui/             # Reusable MUI components
+│   │   │   ├── map/            # Map & route components
+│   │   │   ├── forms/          # Trip input forms
+│   │   │   ├── logs/           # ELD log sheet components
+│   │   │   └── layout/         # App layout wrappers
+│   │   ├── pages/              # Page-level components
+│   │   ├── services/           # API service layer
+│   │   ├── utils/              # Utility functions
+│   │   ├── hooks/              # Custom React hooks
+│   │   ├── theme/              # MUI theme config
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── main.jsx
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── vercel.json
+│   └── .env.example
+└── README.md
+```
+
+## Development Phases
+
+### Phase 1: Project Scaffolding & Architecture ✅
+- Directory structure, configs, CI/CD setup
+
+### Phase 2: Backend API — Core HOS Engine
+- Django models, HOS calculator, route service, API endpoints
+
+### Phase 3: Frontend — Trip Input & Map
+- Trip form, map integration, route display
+
+### Phase 4: Frontend — ELD Log Sheet Drawing ✅
+- Canvas-based daily log rendering, multi-day support, and PDF Export
+
+### Phase 5: Integration, Testing & Polish ✅
+- End-to-end flow, error handling, UI polish
+
+### Phase 6: Deployment ✅
+- Railway (backend) + Vercel (frontend), environment configs
+
+## Getting Started
+
+### Backend
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env      # Configure your env vars
+python manage.py migrate
+python manage.py runserver
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+cp .env.example .env      # Configure API URL
+npm run dev
+```
+
+## Environment Variables
+
+### Backend (.env)
+```
+SECRET_KEY=your-django-secret-key
+DEBUG=True
+DATABASE_URL=postgresql://user:pass@host:port/dbname
+ALLOWED_HOSTS=localhost,127.0.0.1
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+```
+
+### Frontend (.env)
+```
+VITE_API_BASE_URL=http://localhost:8000/api
+```
+
+## License
+
+MIT
