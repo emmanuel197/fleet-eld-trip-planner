@@ -63,6 +63,11 @@ body.dark .leaflet-popup-close-button {
   display: none;
 }
 
+/* Lighten the dark map tiles for better readability */
+.dark-tiles {
+  filter: brightness(1.4) contrast(0.9);
+}
+
 
 /* ─── PRINT STYLES (FMCSA Log Format) ─── */
 @media print {

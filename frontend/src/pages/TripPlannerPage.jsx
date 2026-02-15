@@ -238,9 +238,12 @@ function TripPlannerPage() {
               icon={<ShieldIcon sx={{ fontSize: '12px !important' }} />}
               label="FMCSA Compliant"
               size="small"
-              sx={{ bgcolor: 'rgba(16,185,129,0.1)', color: '#34D399', fontWeight: 700,
+              sx={{ 
+                display: { xs: 'none', sm: 'inline-flex' }, // Hide on mobile
+                bgcolor: 'rgba(16,185,129,0.1)', color: '#34D399', fontWeight: 700,
                 fontSize: '0.65rem', border: '1px solid rgba(16,185,129,0.2)',
-                '& .MuiChip-icon': { color: '#34D399' } }}
+                '& .MuiChip-icon': { color: '#34D399' } 
+              }}
             />
             <ThemeToggle size="small" />
           </Stack>

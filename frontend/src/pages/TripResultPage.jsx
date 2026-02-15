@@ -226,21 +226,39 @@ function TripResultPage() {
                 <Typography sx={{ fontSize: '0.6rem', color: colors.textMuted, lineHeight: 1 }}>Trip Results</Typography>
               </Box>
             </Stack>
-            <Stack direction="row" spacing={2} alignItems="center">
+            <Stack direction="row" spacing={{ xs: 1, sm: 2 }} alignItems="center">
               <ThemeToggle size="small" />
-              <Button startIcon={<PictureAsPdfIcon />} onClick={handlePrint}
-                sx={{ color: colors.btnText, fontSize: '0.75rem', fontWeight: 600,
-                  bgcolor: colors.btnBg, borderRadius: '9999px', px: 2, py: 0.75,
+              
+              {/* Responsive Export Button (Icon only on mobile) */}
+              <Button onClick={handlePrint}
+                sx={{ 
+                  color: colors.btnText, fontSize: '0.75rem', fontWeight: 600,
+                  bgcolor: colors.btnBg, borderRadius: '9999px', 
+                  px: { xs: 1.25, sm: 2 }, py: 0.75,
+                  minWidth: { xs: 36, sm: 'auto' },
                   border: `1px solid ${colors.btnBorder}`,
-                  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(241,245,249,1)', borderColor: isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1' } }}>
-                Export PDF
+                  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(241,245,249,1)', borderColor: isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1' } 
+                }}>
+                <PictureAsPdfIcon sx={{ fontSize: 18, mr: { xs: 0, sm: 1 } }} />
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  Export PDF
+                </Box>
               </Button>
-              <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}
-                sx={{ color: colors.btnText, fontSize: '0.75rem', fontWeight: 600,
-                  bgcolor: colors.btnBg, borderRadius: '9999px', px: 2, py: 0.75,
+
+              {/* Responsive New Trip Button (Icon only on mobile) */}
+              <Button onClick={() => navigate('/')}
+                sx={{ 
+                  color: colors.btnText, fontSize: '0.75rem', fontWeight: 600,
+                  bgcolor: colors.btnBg, borderRadius: '9999px',
+                  px: { xs: 1.25, sm: 2 }, py: 0.75,
+                  minWidth: { xs: 36, sm: 'auto' },
                   border: `1px solid ${colors.btnBorder}`,
-                  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(241,245,249,1)', borderColor: isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1' } }}>
-                New Trip
+                  '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(241,245,249,1)', borderColor: isDark ? 'rgba(255,255,255,0.2)' : '#CBD5E1' } 
+                }}>
+                <ArrowBackIcon sx={{ fontSize: 18, mr: { xs: 0, sm: 1 } }} />
+                <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+                  New Trip
+                </Box>
               </Button>
             </Stack>
           </Toolbar>

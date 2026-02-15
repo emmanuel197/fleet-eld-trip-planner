@@ -114,6 +114,7 @@ function RouteMap({ routeGeometry = [], stops = [], height = 400 }) {
         <TileLayer
           url={isDark ? TILE_URLS.dark : TILE_URLS.light}
           attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          className={isDark ? "dark-tiles" : ""}
         />
 
         {/* Auto-fit bounds to route */}
