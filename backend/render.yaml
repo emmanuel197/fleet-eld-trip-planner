@@ -1,11 +1,9 @@
 # Render deployment configuration
 # https://docs.render.com/blueprint-spec
-
-databases:
-  - name: fleet-eld-db
-    plan: free
-    databaseName: fleet_eld_db
-    user: fleet_eld_user
+#
+# Database: external Neon PostgreSQL (NOT a Render-managed DB).
+# Set DATABASE_URL in the Render dashboard (Environment tab) — it is
+# marked `sync: false` so the Neon password is never committed to git.
 
 services:
   - type: web
@@ -16,9 +14,7 @@ services:
     startCommand: "gunicorn eld_project.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: fleet-eld-db
-          property: connectionString
+        sync: false
       - key: SECRET_KEY
         generateValue: true
       - key: DEBUG
@@ -26,6 +22,6 @@ services:
       - key: ALLOWED_HOSTS
         value: ".onrender.com"
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://fleet-eld-trip-planner.vercel.app"
+        value: "https://tripplanner-indol-six.vercel.app"
       - key: PYTHON_VERSION
         value: "3.11.6"
