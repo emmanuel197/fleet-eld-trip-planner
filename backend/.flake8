@@ -1,0 +1,3 @@
+[flake8]
+exclude = .venv,venv,migrations,staticfiles,cache,.git
+max-line-length = 120
